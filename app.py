@@ -10,11 +10,11 @@ import os
 # 後面一樣
 
 from line_bot_api import *
-from events.about_us import about_us_event
-from events.location import location_event
-from events.contact import contact_event
-from events.appointment import appointment_event, appointment_datetime_event, appointment_completed_event
-from events.quick_reply import quick_reply_event
+from events.location import *
+from events.appointment import *
+from events.quick_reply_wash_action import *
+from events.quick_reply_wash_make import *
+from events.image_map_book import *
 from database import db_session, init_db
 
 app = Flask(__name__)
@@ -65,16 +65,13 @@ def handle_message(event):
     # 當message_text等同於'＠關於我們'時，會回傳line_bot_api.reply_message(）裡的值
     # 另外，當有用到TextSendMessage、ImageSendMessage、VideoSendMessage、等等...
     # 多個Message objects時，要記得用成陣列，才會一次訊息同時送出
-    if message_text == '關於我們':
-        about_us_event(event)
-    elif message_text == '地址':
+    if message_text == '商家位置':
         location_event(event)
-    elif message_text == '聯絡我們':
-        contact_event(event)
-    elif message_text == '立即預訂':
-        appointment_event(event)
-    elif message_text == 'test':
-        quick_reply_event(event)
+    elif message_text == '立即預約':
+        book_event(event)
+        # appointment_event(event)
+    elif message_text == '洗衣機清潔':
+        quick_reply_wash_action_event(event)
 
 
 # 前面的@handler.add主要是處理MessageEvent，接收純文字訊息
@@ -87,17 +84,15 @@ def handler_postback(event):
     # 那list如果要轉換成字典，在前面加上dict即可
     # 有了字典就可以針對action和server去取得資料（action和server是自定義宣告的，可以做更換）
     data = dict(parse_qsl(event.postback.data))
-    action_data = data.get('action')
+
     service_data = data.get('service')
+    action_data = data.get('action')
+    make_data = data.get('make')
 
     # 接著就是做判斷，判斷我們的action等於什麼，然後做什麼事
-    # 那我們這邊判斷如果等於step2，我們就做預約的動作
-    if action_data == 'step2':
-        appointment_datetime_event(event)
-    elif action_data == 'step3':
-        appointment_completed_event(event)
-    elif action_data == 'step4':
-        appointment_datetime_event(event)
+    # 那我們這邊判斷如果等於參數，我們就做預約的動作
+    if action_data == 'upright':
+        quick_reply_wash_make_event(event)
 
 
 if __name__ == "__main__":
